@@ -113,7 +113,7 @@ echo "${green}Starting installation of caffe_ros and px4_controller ROS packages
 cd $HOME
 if [ ! -d "$HOME/redtail" ]; then
     echo "Cloning redtail sources..."
-    git clone https://github.com/NVIDIA-Jetson/redtail
+    git clone https://github.com/frozeneyefree/redtail
 else
     echo "Updating redtail sources..."
     cd redtail
