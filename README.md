@@ -1,6 +1,6 @@
 # Redtail project with Jetpack 4.2
 
-本项目派生自 Nvidia Redtail 项目(Jetpack 3.2 with OpenCV 3.3.1)，原始项目已停止更新。有关原始项目的更多信息，转至[本页](https://github.com/NVIDIA-AI-IOT/redtail)。
+本项目派生自 Nvidia Redtail 项目(Jetpack 3.2 with OpenCV 3.3.1)，有关原始项目的更多信息，转至[本页](https://github.com/NVIDIA-AI-IOT/redtail)。
 
 本工程对原始项目代码进行了更新和调整，已适配 Jectpack 4.2。
 
@@ -40,13 +40,10 @@
   * 修复Bug Could not get gstreamer sample.
 
 ***********************************************
-中外友好分割线
-Beautiful split line of Hua Lili.
+中外友好分割线--------------------------------------------------------------------------------------------------Beautiful split line of Hua Lili.
 ***********************************************
 
-This project has been matched to the Jectpack 4.2. 
-
-This project is forked from Nvidia Redtail project.
+This project was forked from Nvidia Redtail project and has been matched to the Jectpack 4.2. 
 
 For more information about the original project, follow the steps on [this page](https://github.com/NVIDIA-AI-IOT/redtail).
 
