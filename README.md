@@ -1,6 +1,6 @@
 # Redtail project with Jetpack 4.2
 
-本项目派生自 Nvidia Redtail 项目(Jetpack 3.2 with OpenCV 3.3.1)，原始项目已停止更新。有关原始项目的更多信息，转至[本页](https://github.com/NVIDIA-AI-IOT/redtail)。
+本项目派生自 Nvidia Redtail 项目(Jetpack 3.2 with OpenCV 3.3.1)，有关原始项目的更多信息，转至[本页](https://github.com/NVIDIA-AI-IOT/redtail)。
 
 本工程对原始项目代码进行了更新和调整，已适配 Jectpack 4.2。
 
