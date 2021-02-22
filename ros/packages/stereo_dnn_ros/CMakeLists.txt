@@ -53,7 +53,7 @@ set(
 list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_53,code=compute_53)
 list(APPEND CUDA_NVCC_FLAGS -gencode arch=compute_62,code=sm_62)
 
-set(stereo_dnn_lib_dir    ${CMAKE_SOURCE_DIR}/stereoDNN)
+set(stereo_dnn_lib_dir    ${CMAKE_SOURCE_DIR}/stereo_dnn_ros/stereoDNN)
 set(stereo_dnn_sample_dir ${stereo_dnn_lib_dir}/sample_app)
 
 ## Specify additional locations of header files
@@ -82,7 +82,7 @@ file(GLOB stereo_dnn_ros_sources src/*.cpp)
 cuda_add_executable(stereo_dnn_ros_node ${stereo_dnn_ros_sources})
 
 # Add StereoDNN sample networks.
-set(stereo_dnn_sample_dir ${CMAKE_SOURCE_DIR}/stereoDNN/sample_app)
+set(stereo_dnn_sample_dir ${CMAKE_SOURCE_DIR}/stereo_dnn_ros/stereoDNN/sample_app)
 target_sources(stereo_dnn_ros_node PRIVATE 
   ${stereo_dnn_sample_dir}/nvsmall_1025x321_net.cpp
   ${stereo_dnn_sample_dir}/nvtiny_513x161_net.cpp

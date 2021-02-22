@@ -10,11 +10,11 @@
     <arg name="device"       default="/dev/video0" />
     <arg name="img_width"    default="640" />
     <arg name="img_height"   default="360" />
-    <arg name="host_ip"      default="10.42.0.85" />
+    <arg name="host_ip"      default="10.0.1.128" />
     <arg name="gscam_config" default="caffe_gscam.launch" />
 
 	<arg name="fcu_url"       default="/dev/ttyTHS1:921600" />
-	<arg name="gcs_url"       default="udp://@10.42.0.85" />
+	<arg name="gcs_url"       default="udp://@10.0.1.128" />
 	<arg name="tgt_system"    default="1" />
 	<arg name="tgt_component" default="1" />
 	<arg name="log_output"    default="screen" />

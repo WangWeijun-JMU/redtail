@@ -33,7 +33,7 @@ bool PX4Controller::Drone::init(ros::NodeHandle& nh)
 }
 
 void PX4Controller::Drone::executeCommand(const PX4Controller& ctl, const geometry_msgs::PoseStamped& goto_pose,
-                                          float /*linear_control_val*/, float /*angular_control_val*/, bool /*has_command*/)
+                            float /*linear_control_val*/, float /*altitude_control_val*/, float /*angular_control_val*/, bool /*has_command*/)
 {
     ROS_ASSERT(is_initialized_);
     // Publish pose update to MAVROS
@@ -107,7 +107,7 @@ void PX4Controller::APMRoverRC::printArgs()
 }
 
 void PX4Controller::APMRoverRC::executeCommand(const PX4Controller& ctl, const geometry_msgs::PoseStamped& goto_pose,
-                                             float linear_control_val, float angular_control_val, bool has_command)
+                            float linear_control_val, float /*altitude_control_val*/, float angular_control_val, bool has_command)
 {
     ROS_ASSERT(is_initialized_);
 
@@ -135,13 +135,49 @@ bool PX4Controller::APMRoverWaypoint::init(ros::NodeHandle& nh)
 }
 
 void PX4Controller::APMRoverWaypoint::executeCommand(const PX4Controller& ctl, const geometry_msgs::PoseStamped& goto_pose,
-                                          float /*linear_control_val*/, float /*angular_control_val*/, bool /*has_command*/)
+                            float /*linear_control_val*/, float /*altitude_control_val*/, float /*angular_control_val*/, bool /*has_command*/)
 {
     ROS_ASSERT(is_initialized_);
     // Publish pose update to MAVROS
     ctl.local_pose_pub_.publish(goto_pose);
 }
 
+bool PX4Controller::ArduCopter::init(ros::NodeHandle& nh)
+{
+    const int QUEUE_SIZE = 1;
+    local_vel_pub_ = nh.advertise<mavros_msgs::PositionTarget>("/mavros/setpoint_raw/local", QUEUE_SIZE);
+    if(!local_vel_pub_)
+    {
+        ROS_INFO("Could not advertise to /mavros/setpoint_raw/local");
+        return false;
+    }
+
+    is_initialized_ = true;
+    return true;
+//    takeoff_client_ = nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
+}
+
+void PX4Controller::ArduCopter::executeCommand(const PX4Controller& ctl, const geometry_msgs::PoseStamped& goto_pose,
+                            float linear_control_val, float altitude_control_val, float angular_control_val, bool has_command)
+{
+    ROS_ASSERT(is_initialized_);
+    // Publish pose update to MAVROS
+    if( has_command)
+    {
+      mavros_msgs::PositionTarget msg;
+      msg.header.stamp = ros::Time::now();
+      msg.header.frame_id = "map";
+      msg.coordinate_frame = 8;
+      msg.type_mask = 1991;
+      msg.velocity.x = 0;
+      msg.velocity.y = linear_control_val;
+      msg.velocity.z = altitude_control_val;
+      msg.yaw_rate = angular_control_val;
+      local_vel_pub_.publish(msg);
+    }
+    else
+      ctl.local_pose_pub_.publish(goto_pose);
+}
 
 void PX4Controller::px4StateCallback(const mavros_msgs::State::ConstPtr &msg)
 {
@@ -311,6 +347,7 @@ void PX4Controller::objDnnCallback(const sensor_msgs::Image::ConstPtr& msg)
     int obj_height = 0;
     int obj_width = 0;
     bool should_stop = false;
+    ROS_INFO("Object DNN Running...");
     for(unsigned int i = 0; i<obj_count; i++)
     {
         float class_id  = objects[i*elem_count + 0];
@@ -319,7 +356,7 @@ void PX4Controller::objDnnCallback(const sensor_msgs::Image::ConstPtr& msg)
         float y         = objects[i*elem_count + 3];
         float w         = objects[i*elem_count + 4];
         float h         = objects[i*elem_count + 5];
-
+	
         // Stop if object's height more than some limit relative to dnn frame height
         // for correct class and sufficient probability
         if( (int)class_id==CLASS_OBJ_STOP &&
@@ -345,6 +382,11 @@ void PX4Controller::objDnnCallback(const sensor_msgs::Image::ConstPtr& msg)
         angular_control_val_ = 0;
         ROS_INFO("OBJ DNN STOP DETECTED: class=%d, prob=%4.2f, x=%d, y=%d, width=%d, height=%d", obj_class, obj_prob, obj_x, obj_y, obj_width, obj_height);
         ROS_INFO("DNN control is de-activated!");
+    }
+    else
+    {
+	use_dnn_data_ = true;  // Turn ON AI control
+ 	ROS_INFO("DNN control is activated!");
     }
 }
 
@@ -393,6 +435,11 @@ bool PX4Controller::parseArguments(const ros::NodeHandle& nh)
         vehicle_ = std::make_unique<APMRoverRC>();
     else if (vehicle_type == "apmroverwaypoint")
         vehicle_ = std::make_unique<APMRoverWaypoint>();
+    else if (vehicle_type == "ardupilot")
+    {
+        vehicle_ = std::make_unique<ArduCopter>();
+        takeoff_cmd_required_ = true;
+    }
     else
     {
         ROS_ERROR("Unknown vehicle type: %s", vehicle_type.c_str());
@@ -501,6 +548,7 @@ bool PX4Controller::init(ros::NodeHandle& nh)
 
     arming_client_ = nh.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
     setmode_client_ = nh.serviceClient<mavros_msgs::SetMode>("/mavros/set_mode");
+    takeoff_client_ = nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
 
     // Subscribe to a JOY (joystick) node if available
     joy_sub_ = nh.subscribe<sensor_msgs::Joy>("/joy", command_queue_size_, &PX4Controller::joystickCallback, this);
@@ -553,10 +601,10 @@ bool PX4Controller::setJoystickParams(std::string joy_type)
     }
     else if (joy_type == "xbox_wired")
     {
-        joystick_linear_axis_ = 4;
-        joystick_angular_axis_ = 3;
-        joystick_altitude_axis_ = 1;
-        joystick_yaw_axis_ = 0;
+        joystick_linear_axis_ = 1;
+        joystick_angular_axis_ = 0;
+        joystick_altitude_axis_ = 4;
+        joystick_yaw_axis_ = 3;
     }
     else if (joy_type == "shield_2017")
     {
@@ -634,9 +682,13 @@ bool PX4Controller::arm()
     mavros_msgs::CommandBool arm_cmd;
     arm_cmd.request.value = true;
 
+    mavros_msgs::CommandTOL takeoff_cmd;
+    takeoff_cmd.request.altitude = takeoff_altitude_gain_;
+
     ros::Time last_request = ros::Time::now();
     ros::Time init_start   = ros::Time::now();
     ROS_INFO("Switching to %s and arming...", vehicle_->getOffboardModeName().c_str());
+    bool armed = false;
     while ( ros::ok() && (ros::Time::now() - init_start < ros::Duration(wait_for_arming_sec_)) )
     {
         geometry_msgs::PoseStamped current_pose = current_pose_; // current_pose_ is updated elsewhere, use its fixed time value for computations
@@ -659,7 +711,9 @@ bool PX4Controller::arm()
                 {
                     ROS_INFO("Vehicle armed");
                     controller_state_ = ControllerState::Armed;
-                    return true;
+                    armed = true;
+                    break;
+                    last_request = ros::Time::now();
                 }
                 last_request = ros::Time::now();
             }
@@ -667,7 +721,8 @@ bool PX4Controller::arm()
             {
                 ROS_INFO("Vehicle was already armed");
                 controller_state_ = ControllerState::Armed;
-                return true;
+                armed = true;
+                break;
             }
         }
 
@@ -688,6 +743,29 @@ bool PX4Controller::arm()
         rate.sleep();
     }
 
+    // ArduCopter can not takeoff by giving a position above the ground using position control in GUIDED mode, need to use takeoff service
+    if( armed)
+    {
+        if( takeoff_cmd_required_)
+        {
+            while ( ros::ok() && (ros::Time::now() - init_start < ros::Duration(wait_for_arming_sec_)) )
+            {
+                if( takeoff_cmd.response.result)
+                    return true;
+                else if( ros::Time::now() - last_request > ros::Duration(1.0))
+                {
+                    ROS_INFO("Sending takeoff for ArduCopter");
+                    if(takeoff_client_.call(takeoff_cmd) && takeoff_cmd.response.success && takeoff_cmd.response.result)
+                        return true;
+                    last_request = ros::Time::now();
+                }
+                else
+                    ROS_INFO_THROTTLE( 0.5, "Waiting to send takeoff for ArduCopter");
+            }
+        }
+        else
+            return true;
+    }
     return false;
 }
 
@@ -813,12 +891,14 @@ void PX4Controller::spin()
                       yaw_control_val, altitude_control_val);
 
             if(altitude_control_val != 0.0f)
+            //if(altitude_control_val != 0.0f && vehicle_->getName() != "APMRoverRC")
             {
                 altitude_ = altitude_ + 0.03f*altitude_control_val;
                 goto_pose.pose.position.z = altitude_;
             }
 
             if(yaw_control_val != 0)
+            //if(yaw_control_val != 0 && vehicle_->getName() != "APMRoverRC")
             {
                 // Rotating in place (left joystick)
                 angular_control_val = 0.3f*yaw_control_val;
@@ -868,7 +948,7 @@ void PX4Controller::spin()
         }
 
         goto_pose.header.stamp = ros::Time::now();
-        vehicle_->executeCommand(*this, goto_pose, linear_control_val, angular_control_val, has_command);
+        vehicle_->executeCommand(*this, goto_pose, linear_control_val*linear_speed_, altitude_control_val, angular_control_val, has_command);
 
         // Log
         tf::quaternionMsgToEigen(goto_pose.pose.orientation, orientation_quaternion);

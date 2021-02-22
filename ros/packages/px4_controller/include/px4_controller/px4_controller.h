@@ -19,9 +19,11 @@
 #include <sensor_msgs/Image.h>
 
 #include <mavros_msgs/CommandBool.h>
+#include <mavros_msgs/CommandTOL.h>
 #include <mavros_msgs/SetMode.h>
 #include <mavros_msgs/State.h>
 #include <mavros_msgs/OverrideRCIn.h>
+#include <mavros_msgs/PositionTarget.h>
 
 #include <tf/tf.h>
 #include <tf2/buffer_core.h>
@@ -64,7 +66,7 @@ private:
         virtual bool init(ros::NodeHandle& nh) = 0;
         virtual void printArgs() {}
         virtual void executeCommand(const PX4Controller& ctl, const geometry_msgs::PoseStamped& goto_pose,
-                                    float linear_control_val, float angular_control_val, bool has_command) = 0;
+                                    float linear_control_val, float altitude_control_val, float angular_control_val, bool has_command) = 0;
         //virtual arm() = 0;
     protected:
         bool is_initialized_ = false;
@@ -76,7 +78,7 @@ private:
         std::string getOffboardModeName() override { return "OFFBOARD"; }
         bool init(ros::NodeHandle& nh) override;
         void executeCommand(const PX4Controller& ctl, const geometry_msgs::PoseStamped& goto_pose,
-                            float /*linear_control_val*/, float /*angular_control_val*/, bool /*has_command*/) override;
+                            float /*linear_control_val*/, float /*altitude_control_val*/, float /*angular_control_val*/, bool /*has_command*/) override;
     };
 
     class APMRoverRC: public Vehicle
@@ -86,7 +88,7 @@ private:
         bool init(ros::NodeHandle& nh) override;
         void printArgs() override;
         void executeCommand(const PX4Controller& ctl, const geometry_msgs::PoseStamped& goto_pose,
-                            float linear_control_val, float angular_control_val, bool has_command) override;
+                            float linear_control_val, float /*altitude_control_val*/, float angular_control_val, bool has_command) override;
     private:
         float linear_speed_scale_ = 1;
         float turn_angle_scale_   = 1;
@@ -107,7 +109,18 @@ private:
         std::string getOffboardModeName() override { return "GUIDED"; }
         bool init(ros::NodeHandle& nh) override;
         void executeCommand(const PX4Controller& ctl, const geometry_msgs::PoseStamped& goto_pose,
-                            float /*linear_control_val*/, float /*angular_control_val*/, bool /*has_command*/) override;
+                            float /*linear_control_val*/, float /*altitude_control_val*/, float /*angular_control_val*/, bool /*has_command*/) override;
+    };
+
+    class ArduCopter: public Vehicle
+    {
+        std::string getName()             override { return "ArduCopter"; }
+        std::string getOffboardModeName() override { return "GUIDED"; }
+        bool init(ros::NodeHandle& nh) override;
+        void executeCommand(const PX4Controller& ctl, const geometry_msgs::PoseStamped& goto_pose,
+                            float linear_control_val, float altitude_control_val, float angular_control_val, bool has_command) override;
+      private:
+        ros::Publisher local_vel_pub_;
     };
 
 private:
@@ -160,6 +173,7 @@ private:
     float turn_angle_   = 0;   // used for filtering
     long dnn_commands_count_;  // number of executed dnn commands
     long joy_commands_count_;  // number of executed teleop commands
+    bool takeoff_cmd_required_ = false; // only used for ArduCopter which needs the takeoff command to be sent on a separate ros service
 
     // Control commands
     // linear control and angular control should be coordinates of a point on a unit circle (controllers produce them naturally)
@@ -200,6 +214,7 @@ private:
     ros::Publisher local_pose_pub_;
     ros::ServiceClient arming_client_;
     ros::ServiceClient setmode_client_;
+    ros::ServiceClient takeoff_client_;
     ros::Subscriber joy_sub_;
     ros::Subscriber dnn_sub_;
     ros::Subscriber objdnn_sub_;

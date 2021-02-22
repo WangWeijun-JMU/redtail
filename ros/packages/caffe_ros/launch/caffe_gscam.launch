@@ -10,7 +10,7 @@
     <arg name="device"     default="/dev/video0" />
     <arg name="img_width"  default="640" />
     <arg name="img_height" default="360" />
-    <arg name="host_ip"    default="10.42.0.85" />
+    <arg name="host_ip"    default="10.0.1.128" />
 
     <!-- Start the GSCAM node -->
     <node pkg="gscam" type="gscam" name="gscam">

@@ -11,9 +11,9 @@
     <arg name="img_width"  default="640" />
     <arg name="img_height" default="360" />
     <!-- 
-    Check wifi settings (ifconfig) to get proper IP address for the adapter that is used to connect to TX-1.
+    Check wifi settings (ifconfig) to get proper IP address for the adapter that is used to connect to TX-1. If apsync is installed, use 10.0.1.128
     -->
-    <arg name="host_ip"    default="10.42.0.85" />
+    <arg name="host_ip"    default="10.0.1.128" />
 
     <!-- Start the GSCAM node -->
     <node pkg="gscam" type="gscam" name="gscam">

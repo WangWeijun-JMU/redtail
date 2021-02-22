@@ -1,0 +1,33 @@
+{
+    "type": "LinearLayout",  
+    "layout_width": "wrap_content",
+    "layout_height": "wrap_content",
+    "orientation": "center",
+    "background": "#66000000",
+    "children": [
+      {
+          "type": "LinearLayout",
+          "id": "worker_trailnet_buttons",        
+          "layout_width": "wrap_content",
+          "layout_height": "80",
+          "orientation": "horizontal",
+          "gravity": "center_vertical",
+          "padding": 0,
+          "children": [
+            {
+              "type": "Button",
+              "id": "launch_button",
+              "layout_width": "wrap_content",
+              "layout_height": "wrap_content",
+              "text": " Launch Drone on Trailnet ",
+              "textAllCaps": false,
+              "background": "red",
+              "on_click": {
+                "worker_id": "launch_drone",
+                "msg_id": "launch"
+              }
+            }
+          ]
+      }
+    ]
+}

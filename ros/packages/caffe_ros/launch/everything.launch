@@ -1,12 +1,12 @@
 <launch>
-    <arg name="trail_prototxt_path" default="/home/nvidia/redtail/models/pretrained/TrailNet_SResNet-18.prototxt" />
-    <arg name="trail_model_path"    default="/home/nvidia/redtail/models/pretrained/TrailNet_SResNet-18.caffemodel" />
+    <arg name="trail_prototxt_path" default="/home/apsync/redtail/models/pretrained/TrailNet_SResNet-18.prototxt" />
+    <arg name="trail_model_path"    default="/home/apsync/redtail/models/pretrained/TrailNet_SResNet-18.caffemodel" />
     <arg name="trail_output_layer"  default="out" />
     <arg name="trail_data_type"     default="fp16" />
     <arg name="trail_rate_hz"       default="30" />
     
-    <arg name="object_prototxt_path" default="/home/nvidia/redtail/models/pretrained/yolo-relu.prototxt" />
-    <arg name="object_model_path"    default="/home/nvidia/redtail/models/pretrained/yolo-relu.caffemodel" />
+    <arg name="object_prototxt_path" default="/home/apsync/redtail/models/pretrained/yolo-relu.prototxt" />
+    <arg name="object_model_path"    default="/home/apsync/redtail/models/pretrained/yolo-relu.caffemodel" />
     <arg name="object_output_layer"  default="fc25" />
     <arg name="object_data_type"     default="fp16" />
     <arg name="object_rate_hz"       default="1" />
@@ -15,7 +15,7 @@
     <!-- 
     Check wifi settings (ifconfig) to get proper IP address for the adapter that is used to connect to TX-2.
     -->
-    <arg name="host_ip" default="10.42.0.85" />
+    <arg name="host_ip" default="10.0.1.128" />
 
 	<!-- MAVROS settings -->
     <arg name="fcu_url"       default="/dev/ttyTHS1:921600" />
