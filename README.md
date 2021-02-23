@@ -40,7 +40,7 @@
   * 修复Bug Could not get gstreamer sample.
 
 ***********************************************
-中外友好分割线--------------------------------------------------------------------------------------------------Beautiful split line of Hua Lili.
+中外友好分割线-------------------------------------------------------------------------------Beautiful split line of Hua Lili.
 ***********************************************
 
 This project was forked from Nvidia Redtail project and has been matched to the Jectpack 4.2. 
